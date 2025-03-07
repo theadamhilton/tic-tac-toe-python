@@ -117,23 +117,57 @@ Write a get_move function that takes 0 arguments, and returns the co-ordinates o
 player’s chosen move as a 2-element tuple or array (one element each for the x and y 
 co-ordinates), or whatever works best in your language.'''
 
-def get_move():
-    try:
-        x = int(input("Enter the x-coordinate of your move (0, 1, or 2): "))
-        y = int(input("Enter the y-coordinate of your move (0, 1, or 2): "))
-        
-        # Ensure the inputs are within the valid range
-        if x in range(3) and y in range(3):
-            return (x, y)
-        else:
-            print("Invalid input. Please enter coordinates between 0 and 2.")
-            return get_move()
-    except ValueError:
-        print("Invalid input. Please enter numerical values.")
-        return get_move()
+'''
+For AI:
+We’ll write a function called random_ai that conforms to our AI interface. This means that 
+it accepts 2 arguments - a Tic-Tac-Toe board and the current player - and returns the 
+co-ordinates of a move. You may notice that random_ai does not actually need to know the 
+current player, since all it is doing is using the board to choose a random legal move. 
+However, in order to conform to our Tic-Tac-Toe AI interface, it still needs to accept the 
+current player as an argument. It can then simply ignore it.
+'''
 
-# move_coords = get_move()
-# print(move_coords)
+import random
+
+def random_ai(board, player):
+    '''board = [
+        ['X', 'O', None],
+        ['O', 'O', None],
+        ['X', None, None]
+    ]'''
+
+    empty_spots = [(x, y) for x in range(3) for y in range(3) if board[x][y] is None]
+
+    if not empty_spots:
+        raise Exception("No more moves available")
+    
+    return random.choice(empty_spots)
+
+#print(random_ai(board, 'X'))
+#print(random_ai(board, 'X'))
+#print(random_ai(board, 'X'))
+#print(random_ai(board, 'X'))
+
+def get_move(player, board):
+    if player == 'O': # if find_winning_and_losing_moves is not None: # uncomment code to switch to AI vs AI or comment code to switch to Human vs Human
+        return find_winning_and_losing_moves(board, player) # comment code to switch to Human vs Human
+    else: # comment code to switch to Human vs Human
+        try:
+            x = int(input("Enter the x-coordinate of your move (0, 1, or 2): "))
+            y = int(input("Enter the y-coordinate of your move (0, 1, or 2): "))
+            
+            # Ensure the inputs are within the valid range
+            if x in range(3) and y in range(3):
+                return (x, y)
+            else:
+                print("Invalid input. Please enter coordinates between 0 and 2.")
+                return get_move()
+        except ValueError:
+            print("Invalid input. Please enter numerical values.")
+            return get_move()
+
+#move_coords = get_move()
+#print(move_coords)
 
 
 '''make_move
@@ -262,6 +296,102 @@ def is_board_tie(board):
     return True
 
 
+'''
+For AI:
+Let’s make a second, slightly more intelligent AI. Write a finds_winning_moves_ai 
+function that returns a winning move if one exists, and a random move otherwise. 
+It too should conform to our AI interface, meaning that it accepts 2 arguments - 
+a Tic-Tac-Toe board and the current player - and returns the co-ordinates of a move. 
+Unlike random_ai, finds_winning_moves_ai will need to use the current_player argument, 
+because it needs to know whose winning moves it should be trying to find.
+'''
+
+def find_winning_moves_ai(board, player):
+    # Check for a winning move
+    for x in range(3):
+        for y in range(3):
+            if board[x][y] is None:
+                # Simulate making the move
+                board[x][y] = player
+                if get_winner(board) == player:
+                    # Undo the move
+                    board[x][y] = None
+                    return (x, y)
+                # Undo the move
+                board[x][y] = None
+    
+    # If no winning move is found, return a random move
+    return random_ai(board, player)
+
+'''board = [
+  ['X', 'O', None],
+  [None, 'O', None],
+  ['X', None, None]
+]'''
+
+#print(find_winning_moves_ai(board, 'X'))
+#print(find_winning_moves_ai(board, 'X'))
+#print(find_winning_moves_ai(board, 'O'))
+#print(find_winning_moves_ai(board, 'O'))
+
+'''
+For AI:
+Write a finds_winning_and_losing_moves_ai that conforms to our AI interface. 
+finds_winning_and_losing_moves_ai should return, in order of preference: a move that 
+wins, a move that block a loss, and a random move.
+'''
+
+def find_winning_and_losing_moves(board, player):
+    opponent = 'X' if player == 'O' else 'O'
+    
+    # Check for a winning move for the AI
+    for x in range(3):
+        for y in range(3):
+            if board[x][y] is None:
+                board[x][y] = player
+                if get_winner(board) == player:
+                    board[x][y] = None
+                    return (x, y)
+                board[x][y] = None
+    
+    # Check for a move that blocks the opponent from winning
+    for x in range(3):
+        for y in range(3):
+            if board[x][y] is None:
+                board[x][y] = opponent
+                if get_winner(board) == opponent:
+                    board[x][y] = None
+                    return (x, y)
+                board[x][y] = None
+    
+    # If no winning or blocking move is found, return a random move
+    return random_ai(board, player)
+
+'''
+For AI:
+Assuming that your opponent will play optimally and trying to find the best responses 
+to their best responses is pretty much what the minimax algorithm does. The only 
+difference is that we’re going to use computers to do it perfectly and much, much 
+faster.
+
+To begin the minimax algorithm, our AI will build a tree of all 250,000 possible games 
+of Tic-Tac-Toe. In order to choose its moves, our AI will put itself in the mind of its opponent. 
+It will see that it’s no good playing moves that will win if your opponent plays 
+foolishly, but lose if they play well. It will assume the worst. 
+
+You must assume that your opponent will choose the moves that maximize their own 
+outcome, and you must choose the moves that MINimize these MAXimum outcomes for your 
+opponent (hence: minimax). Leave them with no good choices, and assume that they will 
+try to do the same to you.
+
+Our AI will start by considering all of the current position’s legal moves, and assigning 
+the position resulting from each move a numerical score. It will calculate these scores by working 
+out what the result of the game would be if it were played out between two equally perfect players. 
+Finally, it will choose the move that gives it the maximum score.
+'''
+
+# Insert minimax_ai function here
+
 
 '''We did not create pseudo-code for the following function 
 so we will create its production code here. 
@@ -282,10 +412,11 @@ def play():
 
         try:
             # Get and make a move
-            move_coords = get_move()
+            move_coords = get_move(current_player, board)
             board = make_move(current_player, board, move_coords)
         except Exception as e:
-            print(e)
+            if "missing" not in str(e): # Hide specific error message
+                print(e)
             continue # Retry the move if it was invalid
         
         # Render the board

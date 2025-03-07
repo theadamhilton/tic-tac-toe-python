@@ -40,3 +40,11 @@ if __name__ == "__main__":
     ]
     get_winner(board_5)
     is_board_tie(board_5)
+
+    board_6 = [
+        ['X', 'O', None],
+        ['O', 'O', None],
+        ['X', None, None]
+    ]
+    get_winner(board_6)
+    is_board_tie(board_6)

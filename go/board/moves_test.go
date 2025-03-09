@@ -10,20 +10,20 @@ func TestRandomAIMove(t *testing.T) {
 	game.Board[0][0] = 1 // Simulate a move on (0, 0)
 	game.Board[1][1] = 2 // Simulate a move on (1, 1)
 
-	// Call randomAIMove and ensure the move is valid
-	row, col, err := randomAIMove(game)
+	// Call RandomAIMove and ensure the move is valid
+	row, col, err := RandomAIMove(game)
 	if err != nil {
-		t.Fatalf("randomAIMove returned an error: %v", err)
+		t.Fatalf("RandomAIMove returned an error: %v", err)
 	}
 
 	// Check if the move is in an empty cell
 	if game.Board[row][col] != 0 {
-		t.Errorf("randomAIMove chose an occupied cell (%d, %d)", row, col)
+		t.Errorf("RandomAIMove chose an occupied cell (%d, %d)", row, col)
 	}
 
 	// Ensure the move is within bounds
 	if row < 0 || row >= game.Height || col < 0 || col >= game.Width {
-		t.Errorf("randomAIMove chose out-of-bounds cell (%d, %d)", row, col)
+		t.Errorf("RandomAIMove chose out-of-bounds cell (%d, %d)", row, col)
 	}
 }
 

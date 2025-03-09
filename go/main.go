@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"tic-tac-toe/ai"
 	"tic-tac-toe/board"
 )
 
@@ -10,30 +11,18 @@ func main() {
 	game := board.NewBoard(3, 3)
 	game.RenderBoard()
 
-	// Placeholder for determining player type (e.g., User or AI)
-	// currentPlayer := "User"
-
 	// Placeholder for player assignments (e.g., 1 = "X" and 2 = "O")
 	userPlayer := 1
 	aiPlayer := 2
 
 	currentPlayer := userPlayer // User starts first
 
-	// Get a move from the current player
-	/*if currentPlayer == "User" {
-		fmt.Println("\nYour turn! Make a move:")
-	}
-	row, col, err := board.GetMove(currentPlayer, game)
-	if err != nil {
-		fmt.Printf("Error: %v\n", err)
-		return // Exit if an error occurs
-	}*/
-
 	// Loop to simulate a simple game with alternating turns
 	for {
 		// Get move based on the current player
 		var row, col int
 		var err error
+		var found bool
 
 		if currentPlayer == userPlayer {
 			fmt.Println("Your turn! Make a move:")
@@ -45,15 +34,17 @@ func main() {
 		} else {
 			// AI's turn
 			fmt.Println("Thinking...")
-			row, col, err = board.GetMove("AI", game)
-			if err != nil {
-				fmt.Println("Error:", err)
-				break // No valid moves avilable, game ends
+			row, col, found = ai.FindWinningOrBlockingMove(game, aiPlayer, userPlayer)
+			if !found {
+				// Fallback to a random move if no winning or blocking moves are found
+				row, col, err = board.RandomAIMove(game)
+				if err != nil {
+					fmt.Println("Error:", err)
+					break // No valid moves avilable, game ends
+				}
 			}
-		}
 
-		// Update the board with the move (temporarily assume Player 1, "X")
-		// game.Board[row][col] = 1
+		}
 
 		// Attempt to make the move
 		err = board.MakeMove(currentPlayer, row, col, game)

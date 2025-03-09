@@ -12,15 +12,32 @@ import (
 // Create a custom random number generator
 var rng = rand.New(rand.NewSource(time.Now().UnixNano()))
 
-// getMove fetches the move from either a human or an AI player.
+// getMove fetches the move from either a user or an AI player.
 func GetMove(player string, gameState *GameState) (int, int, error) {
 	if player == "AI" {
 		// Call AI logic to generate a move
 		return randomAIMove(gameState)
 	} else {
-		// Prompt the human player for their move
+		// Prompt the user player for their move
 		return userMoveInput(gameState)
 	}
+}
+
+// makeMove applies the player's move to the game board.
+func MakeMove(player int, y, x int, gameState *GameState) error {
+	// Validate that the move is within bounds
+	if x < 0 || x >= gameState.Width || y < 0 || y >= gameState.Height {
+		return fmt.Errorf("invalid move: out of bounds")
+	}
+
+	// Check if the cell is already occupied
+	if gameState.Board[y][x] != 0 {
+		return fmt.Errorf("invalid move: cell (%d, %d) is already occupied", y, x)
+	}
+
+	// Apply the move to the board
+	gameState.Board[y][x] = player
+	return nil // Move successfully made
 }
 
 // userMoveInput handles move input for user players.

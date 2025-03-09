@@ -42,3 +42,37 @@ func TestGetMoveAI(t *testing.T) {
 		t.Errorf("GetMove (AI) chose an occupied cell (%d, %d)", row, col)
 	}
 }
+
+func TestMakeMove(t *testing.T) {
+	game := NewBoard(3, 3) // Initialize a 3x3 board
+
+	// Test valid move
+	err := MakeMove(1, 1, 1, game)
+	if err != nil {
+		t.Errorf("MakeMove failed for a valid move: %v", err)
+	}
+	if game.Board[1][1] != 1 {
+		t.Errorf("MakeMove did not update the board correctly at (1, 1)")
+	}
+
+	// Test out-of-bounds move
+	err = MakeMove(2, 3, 3, game)
+	if err == nil {
+		t.Errorf("MakeMove did not return an error for an out-of-bounds move")
+	}
+
+	// Test move to an already occupied cell
+	err = MakeMove(2, 1, 1, game)
+	if err == nil {
+		t.Errorf("MakeMove did not return an error for a move to an occupied cell")
+	}
+
+	// Test another valid move
+	err = MakeMove(2, 0, 0, game)
+	if err != nil {
+		t.Errorf("MakeMove failed for a valid move: %v", err)
+	}
+	if game.Board[0][0] != 2 {
+		t.Errorf("MakeMove did not update the board correctly at (0, 0)")
+	}
+}

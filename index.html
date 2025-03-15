@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic-Tac-Toe</title>
+</head>
+<body>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+
+        #game-board {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            grid-gap: 5px;
+            justify-content: center;
+            margin-top: 50px;
+        }
+
+        .cell {
+            width: 100px;
+            height: 100px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            border: 1px solid #000;
+            cursor: pointer;
+        }
+
+        .cell.taken {
+            cursor: not-allowed;
+            background-color: #f0f0f0;
+        }
+
+        #notification {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #333;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 5px;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+            z-index: 100;
+        }
+
+        #notification.show {
+            opacity: 1;
+        }
+    </style>
+
+    <div id="notification"></div>
+    <div id="game-board"></div>
+
+    <script>
+        const board = document.getElementById('game-board');
+        const notification = document.getElementById('notification');
+
+        // Initialize a 3x3 board
+        const gameState = [
+            ['', '', ''],
+            ['', '', ''],
+            ['', '', '']
+        ];
+
+        let player = '';
+        let currentPlayer = 'X'; // Default player marker (will be updated by the server)
+        const ws = new WebSocket('ws://192.168.1.230:6789'); // Replace with your server's LAN IP
+
+        // Function to show notifications dynamically
+        function showNotification(message) {
+            notification.textContent = message;
+            notification.classList.add('show');
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000); // Hide after 3 seconds
+        }
+
+        // Create the game board UI
+        function createBoard() {
+            board.innerHTML = ''; // Clear the board
+            for (let i = 0; i < 3; i++) {
+                for (let j = 0; j < 3; j++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('cell');
+                    cell.dataset.row = i;
+                    cell.dataset.col = j;
+                    cell.textContent = gameState[i][j];
+
+                    // Add click event for making a move
+                    cell.addEventListener('click', () => makeMove(i, j));
+                    board.appendChild(cell);
+                }
+            }
+        }
+
+        // Send a move to the server
+        function makeMove(row, col) {
+            if (gameState[row][col] !== '' || currentPlayer !== player) {
+                return; // Cell is already taken or it's not the player's turn
+            }
+
+            // Update local game state and send move to the server
+            gameState[row][col] = player;
+            ws.send(JSON.stringify({
+                type: 'move',
+                row: row,
+                col: col,
+                player: player
+            }));
+
+            updateBoard();
+        }
+
+        // Update the game board UI
+        function updateBoard() {
+            const cells = document.querySelectorAll('.cell');
+            cells.forEach(cell => {
+                const row = cell.dataset.row;
+                const col = cell.dataset.col;
+                cell.textContent = gameState[row][col];
+                if (gameState[row][col] !== '') {
+                    cell.classList.add('taken');
+                } else {
+                    cell.classList.remove('taken');
+                }
+            });
+        }
+
+        // Handle messages from the server
+        ws.onmessage = (event) => {
+            const message = JSON.parse(event.data);
+            
+            switch (message.type) {
+                case 'init':
+                    player = message.player; // Initialize the player's marker (e.g., "X" or "O")
+                    showNotification(`You are Player ${player}`);
+                    break;
+                case 'move':
+                    gameState[message.row][message.col] = message.player; // Update the board state
+                    currentPlayer = message.nextPlayer; // Update whose turn it is
+                    showNotification(`Player ${currentPlayer}'s turn`);
+                    updateBoard();
+                    break;
+                case 'result':
+                    showNotification(message.winner
+                        ? `Player ${message.winner} wins!`
+                        : "It's a tie!");
+                    break;
+                case 'error':
+                    showNotification(`Error: ${message.message}`);
+                    break;
+            }
+        };
+
+        // Handle WebSocket connection open
+        ws.onopen = () => {
+            showNotification('Connected to the server. Waiting for another player...');
+            ws.send(JSON.stringify({ type: 'join', session: 'RoomA' })); // Join a session
+        };
+
+        // Handle WebSocket connection close
+        ws.onclose = (event) => {
+            console.log("WebSocket closed:", event.code, event.reason);
+        };
+
+        // Create the initial board
+        createBoard();
+    </script>
+</body>
+</html>

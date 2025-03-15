@@ -150,7 +150,23 @@ def random_ai(board, player):
 
 def get_move(player, board):
     if player == 'O': # if find_winning_and_losing_moves is not None: # uncomment code to switch to AI vs AI or comment code to switch to Human vs Human
-        return find_winning_and_losing_moves(board, player) # comment code to switch to Human vs Human
+       # return find_winning_and_losing_moves(board, player) # comment code to switch to Human vs Human
+        opponent = "X"
+        best_score = float('-inf')
+        best_move = None
+
+        for x in range(3):
+            for y in range(3):
+                if board[x][y] is None: # Check empty spots
+                    board[x][y] = player # Try the move
+                    score = minimax(board, 0, False, player, opponent)
+                    board[x][y] = None # Undo the move
+                    if score > best_score:
+                        best_score = score
+                        best_move = (x, y)
+
+        print(f"AI ({player}) selects move {best_move} with score {best_score}")
+        return best_move
     else: # comment code to switch to Human vs Human
         try:
             x = int(input("Enter the x-coordinate of your move (0, 1, or 2): "))
@@ -161,10 +177,10 @@ def get_move(player, board):
                 return (x, y)
             else:
                 print("Invalid input. Please enter coordinates between 0 and 2.")
-                return get_move()
+                return get_move(player, board)
         except ValueError:
             print("Invalid input. Please enter numerical values.")
-            return get_move()
+            return get_move(player, board)
 
 #move_coords = get_move()
 #print(move_coords)
@@ -390,7 +406,35 @@ out what the result of the game would be if it were played out between two equal
 Finally, it will choose the move that gives it the maximum score.
 '''
 
-# Insert minimax_ai function here
+def minimax(board, depth, is_maximizing, player, opponent):
+    winner = get_winner(board)
+    if winner == player:
+        return 10 - depth
+    elif winner == opponent:
+        return depth - 10
+    elif is_board_tie(board):
+        return 0
+
+    if is_maximizing:
+        max_eval = float('-inf')
+        for x in range(3):
+            for y in range(3):
+                if board[x][y] is None:
+                    board[x][y] = player
+                    eval = minimax(board, depth + 1, False, player, opponent)
+                    board[x][y] = None
+                    max_eval = max(max_eval, eval)
+        return max_eval
+    else:
+        min_eval = float('inf')
+        for x in range(3):
+            for y in range(3):
+                if board[x][y] is None:
+                    board[x][y] = opponent
+                    eval = minimax(board, depth + 1, True, player, opponent)
+                    board[x][y] = None
+                    min_eval = min(min_eval, eval)
+        return min_eval
 
 
 '''We did not create pseudo-code for the following function 

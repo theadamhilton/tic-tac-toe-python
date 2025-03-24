@@ -66,7 +66,6 @@ func playUserVsAI(game *board.GameState) {
 		// Get move based on the current player
 		var row, col int
 		var err error
-		var found bool
 
 		if currentPlayer == userPlayer {
 			fmt.Println("Your turn! Make a move:")
@@ -78,15 +77,7 @@ func playUserVsAI(game *board.GameState) {
 		} else {
 			// AI's turn
 			fmt.Println("Thinking...")
-			row, col, found = ai.FindWinningOrBlockingMove(game, aiPlayer, userPlayer)
-			if !found {
-				// Fallback to a random move if no winning or blocking moves are found
-				row, col, err = board.RandomAIMove(game)
-				if err != nil {
-					fmt.Println("Error:", err)
-					break // No valid moves avilable, game ends
-				}
-			}
+			row, col = ai.FindBestMove(game, aiPlayer, userPlayer)
 		}
 
 		// Attempt to make the move
